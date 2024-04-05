@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/gorcon/rcon"
-	"github.com/gorcon/rcon-cli/internal/config"
-	"github.com/gorcon/rcon-cli/internal/logger"
+	"github.com/gelmo/rcon"
+	"github.com/gelmo/rcon-cli/internal/config"
+	"github.com/gelmo/rcon-cli/internal/logger"
 	"github.com/gorcon/telnet"
 	"github.com/gorcon/websocket"
 	"github.com/urfave/cli/v2"

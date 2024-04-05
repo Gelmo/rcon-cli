@@ -1,9 +1,9 @@
-module github.com/gorcon/rcon-cli
+module github.com/gelmo/rcon-cli
 
 go 1.21
 
 require (
-	github.com/gorcon/rcon v1.3.5
+	github.com/gelmo/rcon v1.3.7
 	github.com/gorcon/telnet v1.2.3
 	github.com/gorcon/websocket v1.1.3
 	github.com/gorilla/websocket v1.5.1
