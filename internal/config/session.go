@@ -12,6 +12,7 @@ const (
 	ProtocolRCON    = "rcon"
 	ProtocolTELNET  = "telnet"
 	ProtocolWebRCON = "web"
+	ProtocolRCONUDP    = "rconudp"
 )
 
 // DefaultProtocol contains the default protocol for connecting to a

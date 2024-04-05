@@ -85,7 +85,7 @@ func (cfg *Config) Validate() error {
 
 	for key, ses := range *cfg {
 		switch ses.Type {
-		case "", ProtocolRCON, ProtocolTELNET, ProtocolWebRCON:
+		case "", ProtocolRCON, ProtocolTELNET, ProtocolWebRCON, ProtocolRCONUDP:
 		default:
 			return fmt.Errorf("%w: unsupported type in %s environment", ErrConfigValidation, key)
 		}

@@ -135,8 +135,33 @@ func (executor *Executor) Dial(ses *config.Session) error {
 		case config.ProtocolWebRCON:
 			executor.client, err = websocket.Dial(
 				ses.Address, ses.Password, websocket.SetDialTimeout(ses.Timeout), websocket.SetDeadline(ses.Timeout))
+		case config.ProtocolRCONUDP:
+			executor.client, err = rcon.DialUDP(
+				ses.Address, ses.Password, rcon.SetDialTimeout(ses.Timeout), rcon.SetDeadline(ses.Timeout))
 		default:
 			executor.client, err = rcon.Dial(
+				ses.Address, ses.Password, rcon.SetDialTimeout(ses.Timeout), rcon.SetDeadline(ses.Timeout))
+		}
+	}
+
+	if err != nil {
+		executor.client = nil
+
+		return fmt.Errorf("auth: %w", err)
+	}
+
+	return nil
+}
+
+// DialUDP sends auth request for remote server. Returns en error if
+// address or password is incorrect.
+func (executor *Executor) DialUDP(ses *config.Session) error {
+	var err error
+
+	if executor.client == nil {
+		switch ses.Type {
+		default:
+			executor.client, err = rcon.DialUDP(
 				ses.Address, ses.Password, rcon.SetDialTimeout(ses.Timeout), rcon.SetDeadline(ses.Timeout))
 		}
 	}
@@ -166,8 +191,14 @@ func (executor *Executor) Execute(w io.Writer, ses *config.Session, commands ...
 		}()
 	}
 
-	if err := executor.Dial(ses); err != nil {
-		return fmt.Errorf("execute: %w", err)
+	if ses.Type == config.ProtocolRCONUDP {
+		if err := executor.DialUDP(ses); err != nil {
+			return fmt.Errorf("execute: %w", err)
+		}
+	} else {
+		if err := executor.Dial(ses); err != nil {
+			return fmt.Errorf("execute: %w", err)
+		}
 	}
 
 	for i, command := range commands {
@@ -226,9 +257,31 @@ func (executor *Executor) Interactive(r io.Reader, w io.Writer, ses *config.Sess
 
 			_, _ = fmt.Fprint(w, "> ")
 		}
+	case config.ProtocolRCONUDP:
+		if err := executor.DialUDP(ses); err != nil {
+			return err
+		}
+
+		_, _ = fmt.Fprintf(w, "Waiting commands for %s (or type %s to exit)\n> ", ses.Address, CommandQuit)
+
+		scanner := bufio.NewScanner(r)
+		for scanner.Scan() {
+			command := scanner.Text()
+			if command != "" {
+				if command == CommandQuit {
+					break
+				}
+
+				if err := executor.Execute(w, ses, command); err != nil {
+					return err
+				}
+			}
+
+			_, _ = fmt.Fprint(w, "> ")
+		}
 	default:
 		_, _ = fmt.Fprintf(w, "Unsupported protocol type (%q). Allowed %q, %q and %q protocols\n",
-			ses.Type, config.ProtocolRCON, config.ProtocolWebRCON, config.ProtocolTELNET)
+			ses.Type, config.ProtocolRCON, config.ProtocolWebRCON, config.ProtocolTELNET, config.ProtocolRCONUDP)
 	}
 
 	return nil
